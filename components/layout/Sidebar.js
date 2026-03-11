@@ -24,7 +24,7 @@ export default function Sidebar() {
           <div className="p-1 rounded-lg bg-blue-600">
             <Zap className="h-5 w-5 text-white" />
           </div>
-          <h1 className="text-lg font-bold tracking-tight text-white">SecurityOS</h1>
+          <h1 className="text-lg font-bold tracking-tight text-white">Security Module</h1>
         </div>
       </div>
       

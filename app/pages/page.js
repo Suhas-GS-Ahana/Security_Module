@@ -3,6 +3,7 @@ import AdminLayout from '@/components/layout/AdminLayout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { FileText, Plus } from 'lucide-react';
+import Link from 'next/link';
 
 import { api } from '@/services/api';
 import ClientPagesTable from './ClientPagesTable';
@@ -30,10 +31,12 @@ export default async function PagesPage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Page Management</h1>
           <p className="text-muted-foreground mt-2 font-medium">Restrict modular page route access controls.</p>
         </div>
-        <Button className="mt-4 md:mt-0 gap-2">
-          <Plus className="h-4 w-4" />
-          Register Page
-        </Button>
+        <Link href="/pages/add-page">
+          <Button className="mt-4 md:mt-0 gap-2">
+            <Plus className="h-4 w-4" />
+            Register Page
+          </Button>
+        </Link>
       </div>
 
       <Card 
