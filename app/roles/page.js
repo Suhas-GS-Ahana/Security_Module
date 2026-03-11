@@ -3,6 +3,7 @@ import AdminLayout from '@/components/layout/AdminLayout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { ShieldCheck, Plus } from 'lucide-react';
+import Link from 'next/link';
 
 import ClientRolesTable from './ClientRolesTable';
 
@@ -41,10 +42,12 @@ export default async function RolesPage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Role Management</h1>
           <p className="text-muted-foreground mt-2 font-medium">Define hierarchical access controls globally.</p>
         </div>
-        <Button className="mt-4 md:mt-0 gap-2">
-          <Plus className="h-4 w-4" />
-          Create Role
-        </Button>
+        <Link href="/roles/add-role">
+          <Button className="mt-4 md:mt-0 gap-2">
+            <Plus className="h-4 w-4" />
+            Create Role
+          </Button>
+        </Link>
       </div>
 
       <Card 
