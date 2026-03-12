@@ -18,6 +18,9 @@ export default function EditPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  const [isLoadingModules, setIsLoadingModules] = useState(true);
+  const [modulesList, setModulesList] = useState([]);
+  
   const [formData, setFormData] = useState({
     page_name: '',
     page_link: '',
@@ -28,10 +31,30 @@ export default function EditPage() {
   });
 
   useEffect(() => {
+    loadModules();
+  }, []);
+
+  useEffect(() => {
     if (pageId) {
       loadPageData(pageId);
     }
   }, [pageId]);
+
+  const loadModules = async () => {
+    try {
+      setIsLoadingModules(true);
+      const res = await api.get('/get-modules');
+      if (res && res.status === 'success' && Array.isArray(res.data)) {
+        setModulesList(res.data);
+      } else {
+        console.warn('Failed to load modules list properly. Using fallback empty list.');
+      }
+    } catch (err) {
+      console.error('Error fetching modules:', err);
+    } finally {
+      setIsLoadingModules(false);
+    }
+  };
 
   const loadPageData = async (id) => {
     try {
@@ -163,14 +186,29 @@ export default function EditPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700">Module ID</label>
-                <Input 
-                  name="module_id" 
-                  type="number"
-                  value={formData.module_id} 
-                  onChange={handleChange} 
-                  placeholder="e.g. 10" 
-                />
+                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                  Module
+                  {isLoadingModules && <Loader2 className="h-3 w-3 animate-spin text-blue-500" />}
+                </label>
+                <select
+                  name="module_id"
+                  value={formData.module_id}
+                  onChange={handleChange}
+                  className="w-full h-10 px-3 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-colors shadow-sm disabled:bg-slate-50 disabled:text-slate-500"
+                  disabled={isLoadingModules}
+                  required
+                >
+                  <option value="" disabled>Select a module...</option>
+                  {modulesList.map((mod) => {
+                    const id = mod.module_id || mod.id;
+                    const name = mod.module_name || mod.name || `Module #${id}`;
+                    return (
+                      <option key={id} value={id}>
+                        {name}
+                      </option>
+                    );
+                  })}
+                </select>
               </div>
 
               <div className="space-y-2">
@@ -197,7 +235,7 @@ export default function EditPage() {
             <div className="flex justify-end pt-6 mt-6 border-t border-border">
               <Button 
                 type="submit" 
-                disabled={isSubmitting}
+                disabled={isSubmitting || isLoadingModules}
                 className="gap-2 shadow-sm"
               >
                 <Save className="h-4 w-4" />
