@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import DataTable from '@/components/ui/DataTable';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -53,7 +54,9 @@ export default function ClientRolesTable({ data }) {
       searchable: false,
       cell: (row) => (
         <div className="flex gap-2">
-          <Button variant="ghost" size="sm" className="text-blue-600 h-8 hover:bg-blue-50">Edit Permissions</Button>
+          <Link href={`/roles/edit-role/${row.role_master_id}`}>
+            <Button variant="ghost" size="sm" className="text-blue-600 h-8 hover:bg-blue-50">Edit Permissions</Button>
+          </Link>
           <Button 
             variant="ghost" 
             size="sm" 
@@ -73,6 +76,7 @@ export default function ClientRolesTable({ data }) {
       columns={columns} 
       data={data} 
       searchPlaceholder="Search roles..." 
+      emptyMessage="No roles available."
       itemsPerPage={5} 
     />
   );

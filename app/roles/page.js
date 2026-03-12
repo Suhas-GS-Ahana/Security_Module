@@ -25,16 +25,6 @@ export default async function RolesPage() {
     console.error("Failed to load roles data:", err);
   }
 
-  // Fallback demo data matching backend schema
-  if (rawData.length === 0) {
-    rawData = [
-      { role_master_id: 1, role_name: "Admin" },
-      { role_master_id: 2, role_name: "Branch-User" },
-      { role_master_id: 3, role_name: "RO-User" },
-      { role_master_id: 4, role_name: "Auditor" }
-    ];
-  }
-
   return (
     <AdminLayout>
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-6 border-b border-border">

@@ -92,7 +92,7 @@ export default function AddRole() {
       p_modified_by: 0,
       p_page_master_id: parseInt(pageIdStr, 10),
       p_role_master_id: 0, // 0 for new 
-      p_page_permission: selectedPages[pageIdStr],
+      p_page_permission: String(selectedPages[pageIdStr]),
       p_is_active: true,
       p_is_deleted: false,
       p_is_debug: 0
