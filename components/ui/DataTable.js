@@ -11,6 +11,7 @@ export default function DataTable({
   columns = [], 
   searchable = true,
   searchPlaceholder = "Search...",
+  emptyMessage = "No matching records found.",
   itemsPerPage = 5 
 }) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -136,7 +137,7 @@ export default function DataTable({
               )) : (
                 <tr>
                   <td colSpan={columns.length} className="p-8 text-center text-muted-foreground h-24">
-                    No matching records found.
+                    {emptyMessage}
                   </td>
                 </tr>
               )}

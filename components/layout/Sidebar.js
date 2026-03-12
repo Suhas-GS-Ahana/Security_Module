@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, ShieldCheck, FileText, ScrollText, Zap } from 'lucide-react';
+import { LayoutDashboard, Users, ShieldCheck, FileText, ScrollText, Zap, Package } from 'lucide-react';
 import { cn } from '@/utils';
 
 export default function Sidebar() {
@@ -14,6 +14,7 @@ export default function Sidebar() {
     { name: 'User Management', path: '/users', icon: Users },
     { name: 'Role Management', path: '/roles', icon: ShieldCheck },
     { name: 'Page Management', path: '/pages', icon: FileText },
+    { name: 'Module Management', path: '/modules', icon: Package },
     { name: 'Logs', path: '/logs', icon: ScrollText },
   ];
 
