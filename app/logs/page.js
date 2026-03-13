@@ -21,7 +21,11 @@ export default async function LogsPage() {
 
   return (
     <AdminLayout>
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-6 border-b border-border">
+
+      <div className="flex items-center justify-center h-screen">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Coming soon</h1>
+      </div>
+      {/* <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-6 border-b border-border">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">System Logs</h1>
           <p className="text-muted-foreground mt-2 font-medium">Immutable audit trails of security operations.</p>
@@ -39,7 +43,7 @@ export default async function LogsPage() {
         headerVariant="gradient"
       >
         <ClientLogsTable data={tableData} />
-      </Card>
+      </Card> */}
     </AdminLayout>
   );
 }

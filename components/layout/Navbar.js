@@ -45,13 +45,13 @@ export default function Navbar() {
       </div>
       
       <div className="flex items-center gap-2 pl-4 border-l border-border md:border-none">
-        <button className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors relative">
+        {/* <button className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors relative">
           <Bell className="h-5 w-5" />
           <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-destructive border-2 border-white"></span>
         </button>
         <button className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
           <Settings className="h-5 w-5" />
-        </button>
+        </button> */}
 
         {/* User avatar */}
         <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold cursor-pointer border border-blue-200 mx-1 text-xs">

@@ -60,9 +60,9 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-blue-600 shadow-lg shadow-blue-600/30">
+            {/* <div className="p-2 rounded-xl bg-blue-600 shadow-lg shadow-blue-600/30">
               <Zap className="h-6 w-6 text-white" />
-            </div>
+            </div> */}
             <span className="text-2xl font-bold text-white tracking-tight">Security Module</span>
           </div>
         </div>
@@ -137,7 +137,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-slate-600 text-xs mt-6">
-          Security Module v2.0 &mdash; Enterprise Administration
+          Security Module &mdash; Enterprise Administration
         </p>
       </div>
     </div>

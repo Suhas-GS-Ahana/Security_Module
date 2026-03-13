@@ -1,122 +1,212 @@
 import React from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import Card from '@/components/ui/Card';
-import { Users, ShieldCheck, Activity, Key, LogIn, Server } from 'lucide-react';
+import Link from 'next/link';
+import { Users, ShieldCheck, FileText, Package, ArrowRight, CheckCircle, XCircle } from 'lucide-react';
+import { api } from '@/services/api';
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  // Fetch all data in parallel — no hardcoded values
+  const [usersRes, rolesRes, pagesRes, modulesRes] = await Promise.allSettled([
+    api.get('/get-users'),
+    api.get('/get-roles'),
+    api.get('/get-pages'),
+    api.get('/get-modules'),
+  ]);
+
+  const users   = usersRes.status   === 'fulfilled' && usersRes.value?.status   === 'success' ? usersRes.value.data   : [];
+  const roles   = rolesRes.status   === 'fulfilled' && rolesRes.value?.status   === 'success' ? rolesRes.value.data   : [];
+  const pages   = pagesRes.status   === 'fulfilled' && pagesRes.value?.status   === 'success' ? pagesRes.value.data   : [];
+  const modules = modulesRes.status === 'fulfilled' && modulesRes.value?.status === 'success' ? modulesRes.value.data : [];
+
+  const activeUsers   = users.filter(u => u.is_active).length;
+  const inactiveUsers = users.length - activeUsers;
+
   const stats = [
-    { title: "Total Users", value: "1,248", icon: Users, color: "text-blue-600", bg: "bg-blue-100", trend: "+12%" },
-    { title: "Active Roles", value: "12", icon: ShieldCheck, color: "text-emerald-600", bg: "bg-emerald-100", trend: "0%" },
-    { title: "System Logs", value: "8,942", icon: Activity, color: "text-indigo-600", bg: "bg-indigo-100", trend: "+24%" },
-    { title: "Failed Logins", value: "43", icon: Key, color: "text-rose-600", bg: "bg-rose-100", trend: "-5%" }
+    {
+      title: 'Total Users',
+      value: users.length,
+      sub: `${activeUsers} active · ${inactiveUsers} inactive`,
+      icon: Users,
+      color: 'text-blue-600',
+      bg: 'bg-blue-50',
+      ring: 'ring-blue-100',
+      href: '/users',
+    },
+    {
+      title: 'Roles',
+      value: roles.length,
+      sub: 'Defined access roles',
+      icon: ShieldCheck,
+      color: 'text-emerald-600',
+      bg: 'bg-emerald-50',
+      ring: 'ring-emerald-100',
+      href: '/roles',
+    },
+    {
+      title: 'Registered Pages',
+      value: pages.length,
+      sub: 'Mapped application routes',
+      icon: FileText,
+      color: 'text-indigo-600',
+      bg: 'bg-indigo-50',
+      ring: 'ring-indigo-100',
+      href: '/pages',
+    },
+    {
+      title: 'Modules',
+      value: modules.length,
+      sub: 'Configured system modules',
+      icon: Package,
+      color: 'text-amber-600',
+      bg: 'bg-amber-50',
+      ring: 'ring-amber-100',
+      href: '/modules',
+    },
   ];
+
+  // API health status based on whether each call succeeded
+  const apiHealth = [
+    { name: 'Users API',   ok: usersRes.status   === 'fulfilled' && usersRes.value?.status   === 'success' },
+    { name: 'Roles API',   ok: rolesRes.status   === 'fulfilled' && rolesRes.value?.status   === 'success' },
+    { name: 'Pages API',   ok: pagesRes.status   === 'fulfilled' && pagesRes.value?.status   === 'success' },
+    { name: 'Modules API', ok: modulesRes.status === 'fulfilled' && modulesRes.value?.status === 'success' },
+  ];
+
+  const recentUsers   = users.slice(-5).reverse();
+  const recentModules = modules.slice(-5).reverse();
 
   return (
     <AdminLayout>
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-6 border-b border-border">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard Overview</h1>
-          <p className="text-muted-foreground mt-2 font-medium">Global security snapshot and metrics.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground mt-2 font-medium">Live overview of your security module.</p>
         </div>
         <div className="mt-4 md:mt-0 px-4 py-2 rounded-full border border-blue-200 bg-blue-50/50 text-blue-700 text-sm font-semibold flex items-center shadow-sm">
-          <div className="h-2 w-2 rounded-full bg-blue-500 mr-2 animate-pulse"></div>
-          Live Sync Active
+          <div className="h-2 w-2 rounded-full bg-blue-500 mr-2 animate-pulse" />
+          Live Data
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, i) => (
-          <Card key={i} className="hover:border-primary/30 transition-colors">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                <h3 className="text-3xl font-bold text-foreground mt-2 tracking-tight">{stat.value}</h3>
-              </div>
-              <div className={`p-3 rounded-xl ${stat.bg} ${stat.color} shadow-inner`}>
-                <stat.icon className="h-6 w-6" />
-              </div>
-            </div>
-            <div className="mt-6 flex items-center text-sm">
-              <span className={`font-semibold ${stat.trend.startsWith('+') ? 'text-emerald-600' : stat.trend === '0%' ? 'text-slate-500' : 'text-rose-600'}`}>
-                {stat.trend}
-              </span>
-              <span className="text-muted-foreground ml-2">from last month</span>
-            </div>
-          </Card>
-        ))}
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-           <Card 
-            title="Recent Audit Events" 
-            description="Latest security-relevant system activities."
-            icon={Server}
-            headerVariant="gradient"
-           >
-            <div className="space-y-6">
-              {[
-                { time: '2m ago', evt: 'Login Attempt', user: 'system_admin', status: 'Success', icon: LogIn, color: 'text-emerald-500' },
-                { time: '14m ago', evt: 'Role Modified', user: 'manager_role', status: 'Success', icon: ShieldCheck, color: 'text-blue-500' },
-                { time: '1h ago', evt: 'Permission Denied', user: 'guest_acc', status: 'Failed', icon: Key, color: 'text-rose-500' },
-              ].map((log, j) => (
-                <div key={j} className="flex items-center justify-between group">
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-2 rounded-full bg-slate-100 group-hover:bg-slate-200 transition-colors ${log.color}`}>
-                      <log.icon className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold">{log.evt}</p>
-                      <p className="text-xs text-muted-foreground">Target: {log.user}</p>
-                    </div>
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <Link key={stat.title} href={stat.href} className="block group">
+              <div className={`bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ring-4 ${stat.ring} ring-opacity-0 group-hover:ring-opacity-100`}>
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`p-3 rounded-xl ${stat.bg} ${stat.color}`}>
+                    <Icon className="h-5 w-5" />
                   </div>
-                  <div className="text-right">
-                    <p className={`text-sm font-medium ${log.status === 'Success' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                      {log.status}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{log.time}</p>
-                  </div>
+                  <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500 group-hover:translate-x-0.5 transition-all" />
                 </div>
-              ))}
+                <p className="text-3xl font-bold text-slate-800 tracking-tight">{stat.value}</p>
+                <p className="text-sm font-medium text-slate-500 mt-1">{stat.title}</p>
+                <p className="text-xs text-slate-400 mt-1">{stat.sub}</p>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Lower grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* Recent Users */}
+        <div className="lg:col-span-1">
+          <Card title="Recent Users" description="Latest registered accounts." icon={Users} headerVariant="gradient">
+            {recentUsers.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">No users found.</p>
+            ) : (
+              <ul className="divide-y divide-slate-100 -mx-1">
+                {recentUsers.map((u) => (
+                  <li key={u.user_master_id} className="flex items-center gap-3 py-3 px-1">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                      {(u.first_name?.[0] || u.user_name?.[0] || '?').toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-800 truncate">{u.first_name} {u.last_name}</p>
+                      <p className="text-xs text-slate-400 truncate">{u.email}</p>
+                    </div>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                      {u.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="pt-3 mt-1 border-t border-slate-100">
+              <Link href="/users" className="text-sm text-blue-600 font-medium hover:underline flex items-center gap-1">
+                View all users <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
           </Card>
         </div>
-        <div>
-          <Card
-            title="System Health"
-            description="Real-time security module status."
-          >
-             <div className="space-y-4">
-               <div>
-                 <div className="flex justify-between text-sm mb-1">
-                   <span className="font-medium">Authentication API</span>
-                   <span className="text-emerald-600 font-semibold">99.9%</span>
-                 </div>
-                 <div className="w-full bg-slate-100 rounded-full h-2">
-                   <div className="bg-emerald-500 h-2 rounded-full" style={{width: '99%'}}></div>
-                 </div>
-               </div>
-               <div>
-                 <div className="flex justify-between text-sm mb-1">
-                   <span className="font-medium">RBAC Database</span>
-                   <span className="text-blue-600 font-semibold">95%</span>
-                 </div>
-                 <div className="w-full bg-slate-100 rounded-full h-2">
-                   <div className="bg-blue-500 h-2 rounded-full" style={{width: '95%'}}></div>
-                 </div>
-               </div>
-               <div>
-                 <div className="flex justify-between text-sm mb-1">
-                   <span className="font-medium">Audit Pipeline</span>
-                   <span className="text-amber-500 font-semibold">78%</span>
-                 </div>
-                 <div className="w-full bg-slate-100 rounded-full h-2">
-                   <div className="bg-amber-400 h-2 rounded-full" style={{width: '78%'}}></div>
-                 </div>
-               </div>
-             </div>
+
+        {/* Recent Modules */}
+        <div className="lg:col-span-1">
+          <Card title="Recent Modules" description="Latest configured modules." icon={Package} headerVariant="gradient">
+            {recentModules.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">No modules found.</p>
+            ) : (
+              <ul className="divide-y divide-slate-100 -mx-1">
+                {recentModules.map((m) => (
+                  <li key={m.module_id} className="flex items-center gap-3 py-3 px-1">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                      {(m.module_name?.[0] || 'M').toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-800 truncate">{m.module_name}</p>
+                      {/* <p className="text-xs text-slate-400 truncate">{m.description || 'No description'}</p> */}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="pt-3 mt-1 border-t border-slate-100">
+              <Link href="/modules" className="text-sm text-blue-600 font-medium hover:underline flex items-center gap-1">
+                View all modules <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </Card>
         </div>
+
+        {/* API Health */}
+        <div className="lg:col-span-1">
+          <Card title="API Health" description="Live connectivity status." icon={ShieldCheck} headerVariant="gradient">
+            <ul className="space-y-3 pt-2">
+              {apiHealth.map((item) => (
+                <li key={item.name} className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-slate-700">{item.name}</span>
+                  <span className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${item.ok ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
+                    {item.ok
+                      ? <><CheckCircle className="h-3.5 w-3.5" /> Online</>
+                      : <><XCircle className="h-3.5 w-3.5" /> Offline</>
+                    }
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            {/* Roles breakdown */}
+            {roles.length > 0 && (
+              <div className="mt-6 pt-4 border-t border-slate-100">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Defined Roles</p>
+                <div className="flex flex-wrap gap-2">
+                  {roles.map((r) => (
+                    <span key={r.role_master_id} className="text-xs px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full font-medium border border-blue-100">
+                      {r.role_name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
+
       </div>
     </AdminLayout>
   );

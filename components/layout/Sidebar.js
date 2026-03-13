@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, ShieldCheck, FileText, ScrollText, Zap, Package } from 'lucide-react';
+import { LayoutDashboard, Users, ShieldCheck, FileText, ScrollText, Package } from 'lucide-react';
 import { cn } from '@/utils';
 import { getSession } from '@/utils/session';
 
@@ -31,13 +31,14 @@ export default function Sidebar() {
 
   return (
     <aside className="w-64 bg-[#0a0f1c] text-slate-300 min-h-screen flex flex-col fixed left-0 top-0 bottom-0 z-20 shadow-xl shadow-blue-900/10 border-r border-[#1e293b]">
-      <div className="h-16 flex items-center px-6 border-b border-[#1e293b] shrink-0 bg-[#0a0f1c]">
-        <div className="flex items-center gap-2">
-          <div className="p-1 rounded-lg bg-blue-600">
-            <Zap className="h-5 w-5 text-white" />
-          </div>
-          <h1 className="text-lg font-bold tracking-tight text-white">Security Module</h1>
-        </div>
+      <div className="h-16 flex items-center gap-3 px-5 border-b border-[#1e293b] shrink-0 bg-[#0a0f1c]">
+        <img
+          src="/ahana-logo-nobg.png"
+          alt="Ahana"
+          className="h-8 w-auto object-contain shrink-0"
+        />
+        <div className="w-px h-5 bg-[#2d3f55] shrink-0" />
+        <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">Security Module</span>
       </div>
       
       <div className="flex-1 py-8 overflow-y-auto w-full px-4 scrollbar-thin">
