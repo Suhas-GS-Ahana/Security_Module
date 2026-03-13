@@ -1,13 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Users, ShieldCheck, FileText, ScrollText, Zap, Package } from 'lucide-react';
 import { cn } from '@/utils';
+import { getSession } from '@/utils/session';
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const session = getSession();
+    if (session) setUser(session);
+  }, []);
 
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -17,6 +24,10 @@ export default function Sidebar() {
     { name: 'Module Management', path: '/modules', icon: Package },
     { name: 'Logs', path: '/logs', icon: ScrollText },
   ];
+
+  const displayName = user?.username || user?.email?.split('@')[0] || 'Admin Portal';
+  const displayEmail = user?.email || 'admin@reporting.co';
+  const initials = displayName.slice(0, 2).toUpperCase();
 
   return (
     <aside className="w-64 bg-[#0a0f1c] text-slate-300 min-h-screen flex flex-col fixed left-0 top-0 bottom-0 z-20 shadow-xl shadow-blue-900/10 border-r border-[#1e293b]">
@@ -61,11 +72,11 @@ export default function Sidebar() {
       <div className="p-6 border-t border-[#1e293b] bg-gradient-to-b from-transparent to-[#050810]">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
-            AD
+            {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">Admin Portal</p>
-            <p className="text-xs text-slate-500 truncate">admin@reporting.co</p>
+            <p className="text-sm font-medium text-white truncate">{displayName}</p>
+            <p className="text-xs text-slate-500 truncate">{displayEmail}</p>
           </div>
         </div>
       </div>

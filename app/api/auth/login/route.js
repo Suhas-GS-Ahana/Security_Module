@@ -1,0 +1,51 @@
+import { NextResponse } from 'next/server';
+
+const API_HOST = process.env.NEXT_PUBLIC_API_HOST || '127.0.0.1';
+const API_PORT = process.env.NEXT_PUBLIC_API_PORT_SECURITY || '8002';
+const BASE_URL = `http://${API_HOST}:${API_PORT}`;
+
+export async function POST(request) {
+  try {
+    const body = await request.json();
+
+    const res = await fetch(`${BASE_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return NextResponse.json(
+        { error: err?.detail || err?.message || 'Invalid credentials.' },
+        { status: res.status }
+      );
+    }
+
+    const data = await res.json();
+
+    // Build session payload to store in cookie
+    const sessionPayload = {
+      user_master_id: data.user?.id,
+      email: data.user?.email,
+      username: data.user?.username,
+      roles: data.user?.roles || [],
+      session_id: data.session_id,
+      app_session_id: data.app_session_id,
+    };
+
+    const response = NextResponse.json({ success: true, user: data.user });
+
+    // Set an HTTP-readable cookie (not httpOnly so client JS can read user info)
+    response.cookies.set('session', JSON.stringify(sessionPayload), {
+      path: '/',
+      maxAge: 60 * 60 * 8, // 8 hours
+      sameSite: 'lax',
+    });
+
+    return response;
+  } catch (err) {
+    console.error('Login route error:', err);
+    return NextResponse.json({ error: 'Server error during login.' }, { status: 500 });
+  }
+}

@@ -1,83 +1,144 @@
-import React from 'react';
-import { ShieldCheck, ArrowRight } from 'lucide-react';
-import Input from '@/components/ui/Input';
+'use client';
+
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Eye, EyeOff, Zap, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          app_session_id: crypto.randomUUID(),
+          session_id: crypto.randomUUID(),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Invalid email or password.');
+        return;
+      }
+
+      // Successful login — redirect to dashboard
+      router.push('/dashboard');
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      setError('A network error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Decorative background blobs */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-        <div className="absolute top-[-10%] right-[-5%] w-[50%] h-[50%] rounded-full bg-blue-500/10 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 blur-[120px]" />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#060c1a] via-[#0a1528] to-[#0d1f3c] flex items-center justify-center p-4">
+      {/* Background grid */}
+      <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
 
-      <div className="max-w-md w-full z-10">
-        <div className="bg-white rounded-2xl shadow-xl shadow-blue-900/5 ring-1 ring-slate-200/50 overflow-hidden backdrop-blur-sm">
-          <div className="p-10">
-            <div className="flex justify-center mb-8">
-              <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                <ShieldCheck className="h-8 w-8 text-white" />
-              </div>
+      {/* Glow blobs */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl" />
+
+      <div className="relative w-full max-w-md">
+        {/* Logo */}
+        <div className="flex justify-center mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-blue-600 shadow-lg shadow-blue-600/30">
+              <Zap className="h-6 w-6 text-white" />
             </div>
-            
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">SecurityModule</h2>
-              <p className="text-slate-500 mt-2 font-medium">Sign in to the Admin Portal</p>
-            </div>
-            
-            <form className="space-y-6">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Work Email</label>
-                <div className="relative">
-                  <Input 
-                    type="email" 
-                    className="h-12 border-slate-200 focus-visible:ring-blue-500/50 bg-slate-50 focus-visible:bg-white" 
-                    placeholder="admin@reporting.co"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-semibold text-slate-700">Password</label>
-                  <a href="#" className="text-sm font-semibold text-blue-600 hover:text-blue-500 transition-colors">
-                    Forgot password?
-                  </a>
-                </div>
-                <div className="relative">
-                  <Input 
-                    type="password" 
-                    className="h-12 border-slate-200 focus-visible:ring-blue-500/50 bg-slate-50 focus-visible:bg-white" 
-                    placeholder="••••••••"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center pt-2">
-                <input id="remember-me" type="checkbox" className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-pointer transition-colors" />
-                <label htmlFor="remember-me" className="ml-3 block text-sm font-medium text-slate-600 cursor-pointer">
-                  Remember this device
-                </label>
-              </div>
-
-              <div className="pt-4">
-                <button 
-                  type="button" 
-                  className="group w-full flex items-center justify-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-md shadow-blue-500/20 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all active:scale-[0.98]"
-                >
-                  Continuue to Dashboard
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </button>
-              </div>
-            </form>
-          </div>
-          
-          <div className="py-4 px-10 bg-slate-50 border-t border-slate-100 flex justify-center">
-            <p className="text-xs text-slate-500 font-medium tracking-wide">
-              Enterprise Secure Authentication
-            </p>
+            <span className="text-2xl font-bold text-white tracking-tight">Security Module</span>
           </div>
         </div>
+
+        {/* Card */}
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl shadow-black/40">
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-white mb-1">Welcome back</h1>
+            <p className="text-slate-400 text-sm">Sign in to your admin account to continue.</p>
+          </div>
+
+          {error && (
+            <div className="mb-6 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300">Email Address</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+                autoComplete="email"
+                className="w-full h-11 px-4 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+              />
+            </div>
+
+            {/* Password */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  autoComplete="current-password"
+                  className="w-full h-11 px-4 pr-11 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-11 mt-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-semibold transition-all duration-200 shadow-lg shadow-blue-600/25 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign In'
+              )}
+            </button>
+          </form>
+        </div>
+
+        <p className="text-center text-slate-600 text-xs mt-6">
+          Security Module v2.0 &mdash; Enterprise Administration
+        </p>
       </div>
     </div>
   );
