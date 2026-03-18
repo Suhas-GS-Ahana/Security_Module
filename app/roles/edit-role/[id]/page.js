@@ -49,38 +49,34 @@ export default function EditRole() {
       // 2. Hydrate the specific Role
       if (roleId) {
         const resRole = await api.get(`/get-role/${roleId}`);
-        if (resRole && resRole.status === 'success' && Array.isArray(resRole.data)) {
-          const rows = resRole.data;
-          
-          if (rows.length > 0) {
-            setRoleName(rows[0].role_name || '');
-          }
-          
-          // Map the detailed mappings into the local state dictionary: { pageId: permVal }
+        if (resRole && resRole.status === 'success' && resRole.data) {
+          const roleData = resRole.data;
+
+          // role_name is directly on the data object
+          setRoleName(roleData.role_name || '');
+
+          // details[] has page_name + page_permission
           const hydratedPerms = {};
-          rows.forEach(row => {
-            if (row.page_name) {
-              // Backend returns page_name, so we lookup the master_id from pagesArr
-              const matchedPage = pagesArr.find(p => p.page_name === row.page_name);
+          (roleData.details || []).forEach(detail => {
+            if (detail.page_name) {
+              const matchedPage = pagesArr.find(p => p.page_name === detail.page_name);
               if (matchedPage) {
                 const pid = matchedPage.page_master_id;
-                
-                let permVal = 4; // default
-                // Permissions returned like "1- Add,Edit,View"
-                if (typeof row.page_permission === 'string') {
-                   const match = row.page_permission.match(/^(\d+)/);
-                   if (match) permVal = parseInt(match[1], 10);
-                } else if (typeof row.page_permission === 'number') {
-                   permVal = row.page_permission;
+                let permVal = 4; // default View Only
+                // Permissions returned like "1- Add,Edit,View" or "2- Add,View"
+                if (typeof detail.page_permission === 'string') {
+                  const match = detail.page_permission.match(/^(\d+)/);
+                  if (match) permVal = parseInt(match[1], 10);
+                } else if (typeof detail.page_permission === 'number') {
+                  permVal = detail.page_permission;
                 }
-                
                 hydratedPerms[pid] = permVal;
               }
             }
           });
           setSelectedPages(hydratedPerms);
         } else {
-           alert('Failed to load role payload. It might not exist.');
+          alert('Failed to load role payload. It might not exist.');
         }
       }
       

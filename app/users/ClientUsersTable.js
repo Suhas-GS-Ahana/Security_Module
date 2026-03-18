@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import DataTable from '@/components/ui/DataTable';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -72,7 +73,9 @@ export default function ClientUsersTable({ data }) {
         const id = row.user_master_id;
         return (
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" className="text-blue-600 h-8 hover:bg-blue-50">Edit</Button>
+            <Link href={`/users/edit-user/${id}`}>
+              <Button variant="ghost" size="sm" className="text-blue-600 h-8 hover:bg-blue-50">Edit</Button>
+            </Link>
             <Button 
               variant="ghost" 
               size="sm" 

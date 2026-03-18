@@ -12,13 +12,23 @@ import { api } from '@/services/api';
 
 const now = new Date().toISOString();
 
+const PERMISSION_OPTIONS = [
+  { value: 1, label: 'Add, Edit, View' },
+  { value: 2, label: 'Add, View' },
+  { value: 3, label: 'Edit, View' },
+  { value: 4, label: 'View Only' },
+];
+
 export default function AddUser() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingRoles, setIsLoadingRoles] = useState(true);
-  const [rolesList, setRolesList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Section 1: Basic Info (master)
+  // Lookup data
+  const [rolesList, setRolesList] = useState([]);
+  const [pagesList, setPagesList] = useState([]);
+
+  // Section 1: Basic Info
   const [master, setMaster] = useState({
     p_user_name: '',
     p_first_name: '',
@@ -27,7 +37,7 @@ export default function AddUser() {
     p_password: '',
   });
 
-  // Section 2: Contact Details (details)
+  // Section 2: Contact Details
   const [details, setDetails] = useState({
     p_contact_number: '',
     p_user_recovery_contact_number: '',
@@ -35,33 +45,31 @@ export default function AddUser() {
     p_user_recovery_email: '',
   });
 
-  // Section 3: Roles — a user can have multiple roles
-  const [selectedRoleIds, setSelectedRoleIds] = useState(new Set());
+  // Section 3: Single role
+  const [selectedRoleId, setSelectedRoleId] = useState('');
 
-  const toggleRole = (roleId, isChecked) => {
-    setSelectedRoleIds(prev => {
-      const next = new Set(prev);
-      if (isChecked) next.add(roleId);
-      else next.delete(roleId);
-      return next;
-    });
-  };
+  // Section 3b: Optional user-level permissions
+  const [enableUserPermissions, setEnableUserPermissions] = useState(false);
+  // { [page_master_id]: permissionNumber }
+  const [selectedPages, setSelectedPages] = useState({});
 
   useEffect(() => {
-    loadRoles();
+    loadLookups();
   }, []);
 
-  const loadRoles = async () => {
+  const loadLookups = async () => {
     try {
-      setIsLoadingRoles(true);
-      const res = await api.get('/get-roles');
-      if (res && res.status === 'success' && Array.isArray(res.data)) {
-        setRolesList(res.data);
-      }
+      setIsLoading(true);
+      const [rolesRes, pagesRes] = await Promise.all([
+        api.get('/get-roles'),
+        api.get('/get-pages'),
+      ]);
+      if (rolesRes?.status === 'success' && Array.isArray(rolesRes.data)) setRolesList(rolesRes.data);
+      if (pagesRes?.status === 'success' && Array.isArray(pagesRes.data)) setPagesList(pagesRes.data);
     } catch (err) {
-      console.error('Error fetching roles:', err);
+      console.error('Error fetching lookups:', err);
     } finally {
-      setIsLoadingRoles(false);
+      setIsLoading(false);
     }
   };
 
@@ -75,9 +83,59 @@ export default function AddUser() {
     setDetails(prev => ({ ...prev, [name]: value }));
   };
 
+  const togglePage = (pageId, isChecked) => {
+    setSelectedPages(prev => {
+      const next = { ...prev };
+      if (isChecked) next[pageId] = 4; // default: View Only
+      else delete next[pageId];
+      return next;
+    });
+  };
+
+  const setPagePermission = (pageId, permValue) => {
+    setSelectedPages(prev => ({ ...prev, [pageId]: parseInt(permValue, 10) }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+
+    // Build permissions array
+    const permissions = [];
+
+    // Role permission entry (p_is_user_level_permission: false)
+    if (selectedRoleId) {
+      permissions.push({
+        p_user_permission_id: 0,
+        p_inserted_by: 0,
+        p_modified_by: 0,
+        p_page_master_id: 0,
+        p_user_master_id: 0,
+        p_role_master_id: parseInt(selectedRoleId, 10),
+        p_is_user_level_permission: false,
+        p_page_permission: '',
+        p_is_active: true,
+        p_is_deleted: false,
+      });
+    }
+
+    // User-level page permissions (p_is_user_level_permission: true)
+    if (enableUserPermissions) {
+      Object.entries(selectedPages).forEach(([pageId, perm]) => {
+        permissions.push({
+          p_user_permission_id: 0,
+          p_inserted_by: 0,
+          p_modified_by: 0,
+          p_page_master_id: parseInt(pageId, 10),
+          p_user_master_id: 0,
+          p_role_master_id: 0,
+          p_is_user_level_permission: true,
+          p_page_permission: String(perm),
+          p_is_active: true,
+          p_is_deleted: false,
+        });
+      });
+    }
 
     const payload = {
       master: {
@@ -91,11 +149,11 @@ export default function AddUser() {
         p_modified_by: 0,
         p_is_active: true,
         p_is_deleted: false,
-        p_single_sign_on: true,
+        p_single_sign_on: false,
         p_is_locked: false,
         p_login_attempt_count: 0,
         p_last_login: now,
-        p_is_user_defined: false,
+        p_is_user_defined: true,
       },
       details: {
         p_user_details_id: 0,
@@ -109,23 +167,12 @@ export default function AddUser() {
         p_is_active: true,
         p_is_deleted: false,
       },
-      permissions: Array.from(selectedRoleIds).map(roleId => ({
-        p_user_permission_id: 0,
-        p_inserted_by: 0,
-        p_modified_by: 0,
-        p_page_master_id: 0,
-        p_user_master_id: 0,
-        p_role_master_id: parseInt(roleId, 10),
-        p_is_user_level_permission: true,
-        p_page_permission: '',
-        p_is_active: true,
-        p_is_deleted: false,
-      })),
+      permissions,
     };
 
     try {
       const resp = await api.post('/upsert-user', payload);
-      if (resp && resp.status === 'success') {
+      if (resp?.status === 'success') {
         router.push('/users');
         router.refresh();
       } else {
@@ -204,53 +251,122 @@ export default function AddUser() {
           </div>
         </Card>
 
-        {/* Section 3 — Role Assignment */}
-        <Card title="Role & Permissions" description="Assign one or more system roles to this user." icon={ShieldCheck} headerVariant="gradient">
-          <div className="pt-4 space-y-4">
-            <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-              Assign Roles
-              {isLoadingRoles && <Loader2 className="h-3 w-3 animate-spin text-blue-500" />}
-            </h3>
-            {isLoadingRoles ? (
-              <div className="flex items-center py-6">
-                <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                <span className="ml-3 text-slate-600 text-sm">Loading roles...</span>
+        {/* Section 3 — Role & Permissions */}
+        <Card title="Role & Permissions" description="Assign a role and optionally define user-level page permissions." icon={ShieldCheck} headerVariant="gradient">
+          <div className="pt-4 space-y-6">
+
+            {/* Single role dropdown */}
+            <div className="space-y-2 max-w-sm">
+              <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                Assign Role
+                {isLoading && <Loader2 className="h-3 w-3 animate-spin text-blue-500" />}
+              </label>
+              <select
+                value={selectedRoleId}
+                onChange={e => setSelectedRoleId(e.target.value)}
+                disabled={isLoading}
+                className="w-full h-10 px-3 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-colors shadow-sm disabled:bg-slate-50 disabled:text-slate-400"
+              >
+                <option value="">No role assigned</option>
+                {rolesList.map(role => (
+                  <option key={role.role_master_id} value={role.role_master_id}>
+                    {role.role_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* User-level permissions toggle */}
+            <div className="border-t border-slate-100 pt-5">
+              <div
+                className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${
+                  enableUserPermissions
+                    ? 'border-indigo-400 bg-indigo-50/40'
+                    : 'border-slate-200 bg-slate-50/50 hover:border-slate-300'
+                }`}
+                onClick={() => {
+                  setEnableUserPermissions(v => !v);
+                  if (enableUserPermissions) setSelectedPages({});
+                }}
+              >
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">Enable User-Level Permissions</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Override role permissions with custom page-level access for this user.</p>
+                </div>
+                {/* Toggle switch */}
+                <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ml-4 ${enableUserPermissions ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+                  <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform ${enableUserPermissions ? 'translate-x-6' : 'translate-x-1'}`} />
+                </div>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {rolesList.map((role) => {
-                  const isChecked = selectedRoleIds.has(role.role_master_id);
-                  return (
-                    <div
-                      key={role.role_master_id}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                        isChecked
-                          ? 'border-blue-500 bg-blue-50/50 shadow-sm shadow-blue-500/10'
-                          : 'border-slate-200 bg-slate-50/50 hover:border-slate-300'
-                      }`}
-                      onClick={() => toggleRole(role.role_master_id, !isChecked)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
-                          checked={isChecked}
-                          onChange={(e) => toggleRole(role.role_master_id, e.target.checked)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <span className="text-sm font-bold text-slate-800">{role.role_name}</span>
-                      </div>
+
+              {/* Page-permission grid — shown only when toggled on */}
+              {enableUserPermissions && (
+                <div className="mt-4">
+                  {isLoading ? (
+                    <div className="flex items-center py-6">
+                      <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                      <span className="ml-3 text-slate-600 text-sm">Loading pages...</span>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {pagesList.map(page => {
+                        const isChecked = selectedPages[page.page_master_id] !== undefined;
+                        const currentPerm = isChecked ? selectedPages[page.page_master_id] : '';
+                        return (
+                          <div
+                            key={page.page_master_id}
+                            className={`p-4 rounded-xl border transition-all ${
+                              isChecked
+                                ? 'border-blue-500 bg-blue-50/50 shadow-sm shadow-blue-500/10'
+                                : 'border-slate-200 bg-slate-50/50 hover:border-slate-300'
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <input
+                                type="checkbox"
+                                className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
+                                checked={isChecked}
+                                onChange={e => togglePage(page.page_master_id, e.target.checked)}
+                              />
+                              <div className="flex-1 space-y-2">
+                                <label
+                                  className="text-sm font-bold text-slate-800 break-words cursor-pointer"
+                                  onClick={() => togglePage(page.page_master_id, !isChecked)}
+                                >
+                                  {page.page_name}
+                                </label>
+                                <select
+                                  disabled={!isChecked}
+                                  value={currentPerm}
+                                  onChange={e => setPagePermission(page.page_master_id, e.target.value)}
+                                  className={`w-full h-9 rounded-md border text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-colors ${
+                                    isChecked
+                                      ? 'bg-white border-blue-200 text-slate-900 shadow-sm'
+                                      : 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+                                  }`}
+                                >
+                                  <option value="" disabled>Select permission...</option>
+                                  {PERMISSION_OPTIONS.map(opt => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
           </div>
         </Card>
 
         {/* Submit */}
         <div className="flex justify-end pt-2">
-          <Button type="submit" disabled={isSubmitting || isLoadingRoles} className="gap-2 shadow-sm">
+          <Button type="submit" disabled={isSubmitting || isLoading} className="gap-2 shadow-sm">
             <Save className="h-4 w-4" />
             {isSubmitting ? 'Creating User...' : 'Create User'}
           </Button>
