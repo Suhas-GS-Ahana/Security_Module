@@ -36,7 +36,8 @@ export default function ClientPagesTable({ data }) {
       header: 'Page Name', 
       accessorKey: 'page_name', 
       sortable: true, 
-      searchable: true 
+      searchable: true ,
+      cell: (row) => <div className="font-semibold text-slate-800 px-1">{row.page_name || "N/A"}</div>
     },
     { 
       header: 'Route', 
