@@ -2,7 +2,7 @@ import React from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import Card from '@/components/ui/Card';
 import Link from 'next/link';
-import { Users, ShieldCheck, FileText, Package, ArrowRight, CheckCircle, XCircle } from 'lucide-react';
+import { Users, ShieldCheck, FileText, Package, ArrowRight, Layout } from 'lucide-react';
 import { api } from '@/services/api';
 
 export default async function DashboardPage() {
@@ -65,16 +65,9 @@ export default async function DashboardPage() {
     },
   ];
 
-  // API health status based on whether each call succeeded
-  const apiHealth = [
-    { name: 'Users API',   ok: usersRes.status   === 'fulfilled' && usersRes.value?.status   === 'success' },
-    { name: 'Roles API',   ok: rolesRes.status   === 'fulfilled' && rolesRes.value?.status   === 'success' },
-    { name: 'Pages API',   ok: pagesRes.status   === 'fulfilled' && pagesRes.value?.status   === 'success' },
-    { name: 'Modules API', ok: modulesRes.status === 'fulfilled' && modulesRes.value?.status === 'success' },
-  ];
-
-  const recentUsers   = users.slice(-5).reverse();
-  const recentModules = modules.slice(-5).reverse();
+  const recentUsers = users.slice(-5).reverse();
+  const recentPages = pages.slice(-5).reverse();
+  const recentRoles = roles.slice(-5).reverse();
 
   return (
     <AdminLayout>
@@ -146,64 +139,62 @@ export default async function DashboardPage() {
           </Card>
         </div>
 
-        {/* Recent Modules */}
+        {/* Recent Pages */}
         <div className="lg:col-span-1">
-          <Card title="Recent Modules" description="Latest configured modules." icon={Package} headerVariant="gradient">
-            {recentModules.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-6 text-center">No modules found.</p>
+          <Card title="Recent Pages" description="Latest registered application routes." icon={Layout} headerVariant="gradient">
+            {recentPages.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">No pages found.</p>
             ) : (
               <ul className="divide-y divide-slate-100 -mx-1">
-                {recentModules.map((m) => (
-                  <li key={m.module_id} className="flex items-center gap-3 py-3 px-1">
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                      {(m.module_name?.[0] || 'M').toUpperCase()}
+                {recentPages.map((p) => (
+                  <li key={p.page_master_id ?? p.page_id ?? p.page_name} className="flex items-center gap-3 py-3 px-1">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                      {(p.page_name?.[0] || 'P').toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 truncate">{m.module_name}</p>
-                      {/* <p className="text-xs text-slate-400 truncate">{m.description || 'No description'}</p> */}
+                      <p className="text-sm font-semibold text-slate-800 truncate">{p.page_name}</p>
+                      <p className="text-xs text-slate-400 truncate">{p.page_link || p.route || '—'}</p>
                     </div>
                   </li>
                 ))}
               </ul>
             )}
             <div className="pt-3 mt-1 border-t border-slate-100">
-              <Link href="/modules" className="text-sm text-blue-600 font-medium hover:underline flex items-center gap-1">
-                View all modules <ArrowRight className="h-3.5 w-3.5" />
+              <Link href="/pages" className="text-sm text-blue-600 font-medium hover:underline flex items-center gap-1">
+                View all pages <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
           </Card>
         </div>
 
-        {/* API Health */}
+        {/* Recent Roles */}
         <div className="lg:col-span-1">
-          <Card title="API Health" description="Live connectivity status." icon={ShieldCheck} headerVariant="gradient">
-            <ul className="space-y-3 pt-2">
-              {apiHealth.map((item) => (
-                <li key={item.name} className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-700">{item.name}</span>
-                  <span className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${item.ok ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
-                    {item.ok
-                      ? <><CheckCircle className="h-3.5 w-3.5" /> Online</>
-                      : <><XCircle className="h-3.5 w-3.5" /> Offline</>
-                    }
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            {/* Roles breakdown */}
-            {roles.length > 0 && (
-              <div className="mt-6 pt-4 border-t border-slate-100">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Defined Roles</p>
-                <div className="flex flex-wrap gap-2">
-                  {roles.map((r) => (
-                    <span key={r.role_master_id} className="text-xs px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full font-medium border border-blue-100">
-                      {r.role_name}
+          <Card title="Recent Roles" description="Latest defined access roles." icon={ShieldCheck} headerVariant="gradient">
+            {recentRoles.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">No roles found.</p>
+            ) : (
+              <ul className="divide-y divide-slate-100 -mx-1">
+                {recentRoles.map((r) => (
+                  <li key={r.role_master_id} className="flex items-center gap-3 py-3 px-1">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                      {(r.role_name?.[0] || 'R').toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-800 truncate">{r.role_name}</p>
+                      {/* <p className="text-xs text-slate-400 truncate">{r.role_description || 'No description'}</p> */}
+                    </div>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${r.is_active !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                      {r.is_active !== false ? 'Active' : 'Inactive'}
                     </span>
-                  ))}
-                </div>
-              </div>
+                  </li>
+                ))}
+              </ul>
             )}
+            <div className="pt-3 mt-1 border-t border-slate-100">
+              <Link href="/roles" className="text-sm text-blue-600 font-medium hover:underline flex items-center gap-1">
+                View all roles <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </Card>
         </div>
 
