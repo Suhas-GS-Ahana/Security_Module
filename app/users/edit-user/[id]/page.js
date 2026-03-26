@@ -206,7 +206,7 @@ export default function EditUser() {
         p_is_locked: false,
         p_login_attempt_count: 0,
         p_last_login: new Date().toISOString(),
-        p_is_user_defined: false,
+        p_is_user_defined: true,
       },
       details: {
         p_user_details_id: 0,
