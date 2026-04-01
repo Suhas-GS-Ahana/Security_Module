@@ -1,5 +1,6 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -15,7 +16,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
-        {children}
+        <ProtectedRoute allowedRoles={["App Admin", "Security Admin"]}>
+          {children}
+        </ProtectedRoute>
       </body>
     </html>
   );

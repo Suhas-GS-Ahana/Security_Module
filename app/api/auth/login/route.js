@@ -24,7 +24,11 @@ export async function POST(request) {
 
     const data = await res.json();
 
-    // Build session payload to store in cookie
+    // The backend now returns { token: "eyJ..." } directly. Let's send it to the client.
+    // We can also extract session info if necessary or simply forward the token.
+    const token = data.token || '';
+
+    // If there's still a data.user payload, we can use it, otherwise we'll just store the token.
     const sessionPayload = {
       user_master_id: data.user?.id,
       email: data.user?.email,
@@ -32,9 +36,10 @@ export async function POST(request) {
       roles: data.user?.roles || [],
       session_id: data.session_id,
       app_session_id: data.app_session_id,
+      token: token
     };
 
-    const response = NextResponse.json({ success: true, user: data.user });
+    const response = NextResponse.json({ success: true, user: data.user, token });
 
     // Set an HTTP-readable cookie (not httpOnly so client JS can read user info)
     response.cookies.set('session', JSON.stringify(sessionPayload), {
@@ -42,6 +47,15 @@ export async function POST(request) {
       maxAge: 60 * 60 * 8, // 8 hours
       sameSite: 'lax',
     });
+    
+    // Set explicit token cookie for Single Sign-On
+    if (token) {
+      response.cookies.set('token', token, {
+        path: '/',
+        maxAge: 60 * 60 * 8,
+        sameSite: 'lax',
+      });
+    }
 
     return response;
   } catch (err) {

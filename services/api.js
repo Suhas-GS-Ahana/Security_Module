@@ -8,6 +8,20 @@ const API_PORT = process.env.NEXT_PUBLIC_API_PORT_SECURITY || '8002';
 
 const BASE_URL = `http://${API_HOST}:${API_PORT}`;
 
+const handleResponseError = (response) => {
+  if (response.status === 401) {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+      document.cookie = 'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      window.location.href = '/login';
+    }
+  } else if (response.status === 403) {
+    if (typeof window !== 'undefined') {
+      window.location.href = '/unauthorized';
+    }
+  }
+};
+
 export const api = {
   get: async (endpoint) => {
     const url = `${BASE_URL}${endpoint}`;
@@ -21,6 +35,7 @@ export const api = {
         cache: 'no-store'
       });
       if (!response.ok) {
+        handleResponseError(response);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       return await response.json();
@@ -42,6 +57,7 @@ export const api = {
         cache: 'no-store'
       });
       if (!response.ok) {
+        handleResponseError(response);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       return await response.json();
@@ -62,6 +78,7 @@ export const api = {
         cache: 'no-store'
       });
       if (!response.ok) {
+        handleResponseError(response);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       return await response.json();

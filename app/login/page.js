@@ -36,7 +36,11 @@ export default function LoginPage() {
         return;
       }
 
-      // Successful login — redirect to dashboard
+      // Successful login — save token and redirect
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+      
       router.push('/dashboard');
       router.refresh();
     } catch (err) {
