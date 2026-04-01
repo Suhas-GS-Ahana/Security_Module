@@ -6,7 +6,7 @@ import { Package, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 import ClientModulesTable from './ClientModulesTable';
-import { api } from '@/services/api';
+import { serverApi as api } from '@/services/server-api';
 
 export default async function ModulesPage() {
   let rawData = [];

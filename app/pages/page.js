@@ -5,7 +5,7 @@ import Button from '@/components/ui/Button';
 import { FileText, Plus } from 'lucide-react';
 import Link from 'next/link';
 
-import { api } from '@/services/api';
+import { serverApi as api } from '@/services/server-api';
 import ClientPagesTable from './ClientPagesTable';
 
 export default async function PagesPage() {

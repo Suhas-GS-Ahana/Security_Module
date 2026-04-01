@@ -3,7 +3,7 @@ import AdminLayout from '@/components/layout/AdminLayout';
 import Card from '@/components/ui/Card';
 import Link from 'next/link';
 import { Users, ShieldCheck, FileText, Package, ArrowRight, Layout } from 'lucide-react';
-import { api } from '@/services/api';
+import { serverApi as api } from '@/services/server-api';
 
 export default async function DashboardPage() {
   // Fetch all data in parallel — no hardcoded values

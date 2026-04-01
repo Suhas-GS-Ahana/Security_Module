@@ -6,7 +6,7 @@ import { Users, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 
 import ClientUsersTable from './ClientUsersTable';
-import { api } from '@/services/api';
+import { serverApi as api } from '@/services/server-api';
 
 export default async function UsersPage() {
   let tableData = [];

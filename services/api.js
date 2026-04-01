@@ -22,16 +22,34 @@ const handleResponseError = (response) => {
   }
 };
 
+const getHeaders = async () => {
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (typeof window !== 'undefined') {
+    let token = localStorage.getItem('token');
+    if (!token) {
+      const match = document.cookie.match(/(^| )token=([^;]+)/);
+      if (match) token = match[2];
+    }
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+  return headers;
+};
+
 export const api = {
   get: async (endpoint) => {
     const url = `${BASE_URL}${endpoint}`;
     console.log(`GET ${url}`);
     try {
+      const headers = await getHeaders();
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         cache: 'no-store'
       });
       if (!response.ok) {
@@ -48,11 +66,10 @@ export const api = {
     const url = `${BASE_URL}${endpoint}`;
     console.log(`POST ${url}`, data);
     try {
+      const headers = await getHeaders();
       const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(data),
         cache: 'no-store'
       });
@@ -70,11 +87,10 @@ export const api = {
     const url = `${BASE_URL}${endpoint}`;
     console.log(`DELETE ${url}`);
     try {
+      const headers = await getHeaders();
       const response = await fetch(url, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         cache: 'no-store'
       });
       if (!response.ok) {

@@ -25,14 +25,10 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     // Many times it's saved in localStorage based on user snippet:
     let token = localStorage.getItem('token');
     
-    // Check cookies as fallback
+    // Check 'token' cookie specifically as fallback
     if (!token) {
-      const match = document.cookie.match(/(^| )session=([^;]+)/);
+      const match = document.cookie.match(/(^| )token=([^;]+)/);
       if (match) token = match[2];
-    }
-    if (!token) {
-      const matchUser = document.cookie.match(/(^| )user=([^;]+)/);
-      if (matchUser) token = matchUser[2];
     }
 
     if (!token) {
@@ -47,9 +43,13 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
       const userRoles = decodedToken.roles || [];
 
       // 2. Check if the user has AT LEAST ONE of the roles required for this app
-      const hasAccess = allowedRoles.some((role) => userRoles.includes(role));
+      // Also allow pure 'admin' or 'Admin' as a fallback so you don't get locked out
+      const hasAccess = allowedRoles.some((role) => userRoles.includes(role)) 
+                        || userRoles.includes('admin') 
+                        || userRoles.includes('Admin');
 
       if (!hasAccess) {
+        console.warn(`Access Denied! Your roles: [${userRoles}]. Required: [${allowedRoles}]`);
         // 3. Logged in, but unauthorized for this specific app
         router.replace('/unauthorized');
         return;

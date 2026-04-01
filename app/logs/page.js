@@ -2,7 +2,7 @@ import React from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import Card from '@/components/ui/Card';
 import { ScrollText } from 'lucide-react';
-import { api } from '@/services/api';
+import { serverApi as api } from '@/services/server-api';
 import ClientLogsTable from './ClientLogsTable';
 
 export default async function LogsPage() {

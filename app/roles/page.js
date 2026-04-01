@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 import ClientRolesTable from './ClientRolesTable';
 
-import { api } from '@/services/api';
+import { serverApi as api } from '@/services/server-api';
 
 export default async function RolesPage() {
   let rawData = [];
